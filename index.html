@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RV Visual — Plataforma de Cambios</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');
+
+  :root {
+    --black: #0D0D0D;
+    --white: #FAFAF8;
+    --sand: #F0EDE6;
+    --mid: #C8C2B8;
+    --slate: #6B6560;
+    --gold: #B8965A;
+    --gold-light: #E8D5AA;
+    --red: #C0392B;
+    --green: #1E7B4B;
+    --green-light: #D4EDDA;
+    --orange: #D4590A;
+    --orange-light: #FAE3D4;
+    --blue: #1A4A7A;
+    --blue-light: #D6E4F5;
+    --purple: #6B3B8B;
+    --purple-light: #EDE0F5;
+    --border: #DDD8D0;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--sand); color: var(--black); min-height: 100vh; font-size: 14px; }
+
+  /* NAV */
+  .topnav { background: var(--black); color: var(--white); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 52px; position: sticky; top: 0; z-index: 100; }
+  .topnav-brand { font-family: 'DM Serif Display', serif; font-size: 17px; letter-spacing: 0.03em; display: flex; align-items: center; gap: 10px; }
+  .topnav-brand span { color: var(--gold); }
+  .topnav-mode { display: flex; gap: 4px; }
+  .mode-btn { background: none; border: 1px solid #333; color: #999; padding: 5px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; transition: all 0.15s; }
+  .mode-btn.active { background: var(--gold); border-color: var(--gold); color: var(--black); }
+  .mode-btn:hover:not(.active) { border-color: #666; color: var(--white); }
+  .user-pill { font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; }
+  .user-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  .page-header { margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; line-height: 1; }
+  .page-sub { color: var(--slate); margin-top: 4px; font-size: 13px; }
+
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--slate); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  label { font-size: 12px; font-weight: 500; color: var(--slate); display: block; margin-bottom: 5px; }
+  input[type=text], input[type=date], textarea, select { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; font-family: 'Inter', sans-serif; font-size: 13px; background: var(--white); color: var(--black); transition: border-color 0.15s, box-shadow 0.15s; outline: none; }
+  input:focus, textarea:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-light); }
+  textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: grid; gap: 16px; margin-bottom: 16px; }
+  .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; }
+
+  /* TIPO */
+  .tipo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .tipo-card { border: 2px solid var(--border); border-radius: 8px; padding: 14px 10px; cursor: pointer; text-align: center; transition: all 0.15s; background: var(--white); }
+  .tipo-card:hover { border-color: var(--gold); }
+  .tipo-card.selected { border-color: var(--gold); background: #FDF8EE; }
+  .tipo-card .tipo-icon { font-size: 22px; margin-bottom: 6px; }
+  .tipo-card .tipo-name { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--slate); }
+  .tipo-card.selected .tipo-name { color: var(--black); }
+
+  /* TIENDAS */
+  .tiendas-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tienda-chip { border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.15s; background: var(--white); }
+  .tienda-chip:hover { border-color: var(--gold); }
+  .tienda-chip.selected { background: var(--gold); border-color: var(--gold); color: var(--white); }
+  .tienda-chip.select-all { border-style: dashed; color: var(--slate); }
+  .tienda-chip.select-all.selected { background: var(--black); border-color: var(--black); color: var(--white); border-style: solid; }
+
+  /* REFS TABLE */
+  .refs-table { width: 100%; border-collapse: collapse; }
+  .refs-table th { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--slate); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .refs-table td { padding: 10px; border-bottom: 1px solid #F0EDE6; font-size: 13px; vertical-align: middle; }
+  .refs-table tr:last-child td { border-bottom: none; }
+  .ref-badge { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; background: var(--sand); border: 1px solid var(--border); padding: 3px 8px; border-radius: 4px; letter-spacing: 0.05em; }
+  .ref-del { background: none; border: none; color: var(--slate); cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; }
+  .ref-del:hover { background: #FDE; color: var(--red); }
+  .scan-row { display: flex; gap: 8px; margin-top: 12px; }
+  .scan-row input { flex: 1; }
+  .btn-scan { background: var(--black); color: var(--white); border: none; border-radius: 6px; padding: 9px 16px; font-size: 12px; font-weight: 600; cursor: pointer; letter-spacing: 0.05em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: background 0.15s; white-space:nowrap; }
+  .btn-scan:hover { background: #333; }
+
+  /* IMAGES */
+  .dropzone { border: 2px dashed var(--border); border-radius: 8px; padding: 28px; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--white); }
+  .dropzone:hover, .dropzone.over { border-color: var(--gold); background: #FDF8EE; }
+  .dropzone-icon { font-size: 28px; margin-bottom: 6px; }
+  .dropzone-text { color: var(--slate); font-size: 13px; }
+  .dropzone-sub { font-size: 11px; color: var(--mid); margin-top: 4px; }
+  .img-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 14px; }
+  .img-preview-wrap { position: relative; aspect-ratio: 3/4; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+  .img-preview-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .img-preview-del { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .img-caption { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.6)); color: white; font-size: 10px; padding: 6px 4px 4px; text-align: center; line-height: 1.3; }
+
+  /* ── MANIQUÍES (HQ) ── */
+  .maniqi-section { margin-bottom: 24px; }
+  .maniqi-group-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--slate); margin-bottom: 10px; padding: 6px 10px; background: var(--sand); border-radius: 4px; }
+  .maniqi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .maniqi-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--white); }
+  .maniqi-card-header { padding: 10px 12px; background: var(--sand); display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; }
+  .maniqi-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: white; flex-shrink:0; }
+  .mn-chica { background: #9B59B6; }
+  .mn-chico { background: #2980B9; }
+  .mn-bodegon { background: #7B6A4A; }
+  .maniqi-card-body { padding: 10px 12px; }
+  .maniqi-img-slot { border: 2px dashed var(--border); border-radius: 6px; aspect-ratio: 3/4; display: flex; flex-direction:column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; margin-bottom: 8px; position: relative; overflow: hidden; }
+  .maniqi-img-slot:hover { border-color: var(--gold); background: #FDF8EE; }
+  .maniqi-img-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .maniqi-img-slot .slot-icon { font-size: 22px; color: var(--mid); }
+  .maniqi-img-slot .slot-text { font-size: 10px; color: var(--mid); margin-top: 4px; }
+  .maniqi-img-del { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.55); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index:2; }
+  .maniqi-refs-list { display: flex; flex-direction: column; gap: 4px; }
+  .maniqi-ref-row { display: flex; gap: 4px; align-items: center; }
+  .maniqi-ref-row input { flex:1; font-size: 11px; padding: 5px 8px; }
+  .maniqi-ref-add { background: none; border: 1px dashed var(--border); border-radius: 4px; color: var(--slate); font-size: 11px; padding: 4px 8px; cursor: pointer; width: 100%; margin-top: 4px; transition: all 0.15s; }
+  .maniqi-ref-add:hover { border-color: var(--gold); color: var(--gold); }
+  .maniqi-ref-del { background: none; border: none; color: var(--mid); cursor: pointer; font-size: 14px; padding: 0 2px; }
+  .maniqi-ref-del:hover { color: var(--red); }
+
+  /* BTNS */
+  .btn { border: none; border-radius: 6px; padding: 10px 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .btn-primary { background: var(--gold); color: var(--white); }
+  .btn-primary:hover { background: #9A7A46; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--slate); }
+  .btn-ghost:hover { border-color: var(--black); color: var(--black); }
+  .btn-success { background: var(--green); color: var(--white); }
+  .btn-success:hover { background: #155C38; }
+  .btn-ok { background: var(--green); color: white; border: none; border-radius: 6px; padding: 7px 14px; font-size: 11px; font-weight: 700; cursor: pointer; letter-spacing: 0.05em; text-transform: uppercase; }
+  .btn-reject { background: var(--red); color: white; border: none; border-radius: 6px; padding: 7px 14px; font-size: 11px; font-weight: 700; cursor: pointer; letter-spacing: 0.05em; text-transform: uppercase; }
+  .actions-bar { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; }
+  .badge-pending { background: var(--orange-light); color: var(--orange); }
+  .badge-done { background: var(--green-light); color: var(--green); }
+  .badge-new { background: var(--blue-light); color: var(--blue); }
+  .badge-review { background: var(--purple-light); color: var(--purple); }
+  .badge-approved { background: var(--green-light); color: var(--green); }
+  .badge-rejected { background: #FDECEA; color: var(--red); }
+
+  /* INSTRUCCION CARDS (tienda) */
+  .instruccion-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+  .instruccion-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--sand); cursor: pointer; }
+  .instruccion-header:hover { background: #FAFAF6; }
+  .instruccion-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .tipo-pill { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; }
+  .tipo-Escaparate { background: #EDE0F5; color: #6B3B8B; }
+  .tipo-Implantación { background: var(--blue-light); color: var(--blue); }
+  .tipo-Rotaciones { background: var(--orange-light); color: var(--orange); }
+  .tipo-Destacados { background: var(--green-light); color: var(--green); }
+  .instruccion-body { padding: 20px; display: none; }
+  .instruccion-body.open { display: block; }
+
+  /* MANIQUÍ SELECCIÓN (tienda) */
+  .maniqi-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .maniqi-select-card { border: 2px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.15s; background: var(--white); }
+  .maniqi-select-card.included { border-color: var(--gold); }
+  .maniqi-select-card .msc-header { padding: 8px 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; }
+  .maniqi-select-card .msc-check { width: 18px; height: 18px; border: 2px solid var(--mid); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; margin-left: auto; flex-shrink:0; }
+  .maniqi-select-card.included .msc-check { background: var(--gold); border-color: var(--gold); color: white; }
+  .maniqi-select-card .msc-img { aspect-ratio: 3/4; background: var(--sand); overflow: hidden; position: relative; }
+  .maniqi-select-card .msc-img img { width: 100%; height: 100%; object-fit: cover; }
+  .maniqi-select-card .msc-img .no-img { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--mid); font-size: 28px; }
+  .maniqi-select-card .msc-refs { padding: 8px 10px; }
+  .maniqi-select-card .msc-refs .ref-badge { display: inline-block; margin: 2px 2px; }
+
+  /* PRENDA ROW */
+  .prenda-row { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: start; padding: 14px 0; border-bottom: 1px solid var(--sand); }
+  .prenda-row:last-child { border-bottom: none; }
+  .prenda-num { width: 28px; height: 28px; border-radius: 50%; background: var(--sand); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--slate); flex-shrink: 0; margin-top: 2px; }
+  .prenda-ref { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+  .prenda-desc { font-size: 12px; color: var(--slate); }
+  .prenda-actions { display: flex; flex-direction: column; gap: 6px; min-width: 260px; }
+  .radio-row { display: flex; gap: 6px; }
+  .radio-opt { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 7px 8px; cursor: pointer; text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; transition: all 0.15s; background: var(--white); color: var(--slate); }
+  .radio-opt:hover { border-color: var(--mid); }
+  .radio-opt.opt-si.selected { background: var(--green); border-color: var(--green); color: white; }
+  .radio-opt.opt-sust.selected { background: var(--orange); border-color: var(--orange); color: white; }
+  .radio-opt.opt-no.selected { background: var(--red); border-color: var(--red); color: white; }
+  .sub-input { margin-top: 6px; display: none; }
+  .sub-input.visible { display: block; }
+  .sub-input input, .sub-input select { font-size: 12px; padding: 7px 10px; }
+
+  /* CONFIRM BAR */
+  .confirm-bar { background: var(--black); color: var(--white); border-radius: 8px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; margin-top: 20px; }
+  .confirm-bar p { font-size: 13px; color: #AAA; }
+  .confirm-bar strong { color: white; }
+
+  /* FOTOS FINALES */
+  .fotos-finales-section { background: var(--sand); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-top: 20px; }
+  .fotos-finales-section h4 { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--slate); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .fotos-upload-mini { border: 2px dashed var(--mid); border-radius: 6px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--white); font-size: 12px; color: var(--slate); }
+  .fotos-upload-mini:hover { border-color: var(--gold); }
+  .fotos-grid-mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-top: 10px; }
+  .foto-mini-wrap { position: relative; aspect-ratio: 3/4; border-radius: 5px; overflow: hidden; border: 1px solid var(--border); }
+  .foto-mini-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .foto-mini-del { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.55); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .aprobacion-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 10px 14px; border-radius: 6px; background: var(--white); border: 1px solid var(--border); }
+
+  /* HQ review fotos */
+  .review-fotos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px,1fr)); gap: 8px; margin: 10px 0; }
+  .review-foto-wrap { position: relative; aspect-ratio: 3/4; border-radius: 5px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; }
+  .review-foto-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .review-foto-wrap:hover::after { content: '🔍'; position: absolute; inset:0; background: rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; font-size:20px; }
+
+  /* STATS */
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; }
+  .stat-label { font-size: 11px; color: var(--slate); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+  .stat-value { font-size: 28px; font-family: 'DM Serif Display', serif; margin-top: 4px; }
+  .stat-sub { font-size: 11px; color: var(--slate); margin-top: 2px; }
+
+  /* HIST TABLE */
+  .hist-table { width: 100%; border-collapse: collapse; }
+  .hist-table th { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--slate); text-align: left; padding: 9px 12px; border-bottom: 2px solid var(--border); background: var(--sand); }
+  .hist-table td { padding: 10px 12px; border-bottom: 1px solid var(--sand); font-size: 13px; vertical-align: middle; }
+  .hist-table tr:hover td { background: #FAFAF6; }
+  .progress-bar-wrap { width: 80px; height: 6px; background: var(--sand); border-radius: 3px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--green); border-radius: 3px; }
+
+  /* TIENDA SELECTOR */
+  .tienda-selector-wrap { max-width: 420px; margin: 80px auto; text-align: center; }
+  .tienda-selector-wrap h2 { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 6px; }
+  .tienda-selector-wrap p { color: var(--slate); font-size: 13px; margin-bottom: 24px; }
+  .tienda-select-grid { display: grid; gap: 10px; margin-bottom: 20px; }
+  .tienda-select-btn { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .tienda-select-btn:hover { border-color: var(--gold); background: #FDF8EE; }
+
+  .pending-badge { background: var(--red); color: white; font-size: 10px; font-weight: 700; border-radius: 10px; padding: 2px 6px; margin-left: 6px; }
+
+  /* LIGHTBOX */
+  .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 999; align-items: center; justify-content: center; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 4px; }
+  .lightbox-close { position: absolute; top: 20px; right: 24px; color: white; font-size: 28px; cursor: pointer; background: none; border: none; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--black); color: var(--white); padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); transform: translateY(80px); opacity: 0; transition: all 0.25s; z-index: 998; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--slate); }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 16px; margin-bottom: 6px; color: var(--black); }
+  .no-data { color: var(--slate); font-size: 13px; font-style: italic; }
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* REVIEW PANEL HQ */
+  .review-item { border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 12px; background: var(--white); }
+  .review-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .review-actions { display: flex; gap: 8px; align-items: center; }
+  .review-nota { font-size: 12px; color: var(--slate); font-style: italic; margin-top: 6px; }
+
+  /* STEP INDICATOR */
+  .step-bar { display: flex; gap: 4px; margin-bottom: 20px; }
+  .step-item { flex: 1; padding: 8px; text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 4px; background: var(--sand); color: var(--mid); }
+  .step-item.active { background: var(--gold); color: var(--black); }
+  .step-item.done { background: var(--green-light); color: var(--green); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-brand"><span>RV</span> Visual Management</div>
+  <div class="topnav-mode">
+    <button class="mode-btn active" onclick="switchMode('hq',this)">🏢 Sede Visual</button>
+    <button class="mode-btn" onclick="switchMode('tienda',this)">🏪 Vista Tienda</button>
+    <button class="mode-btn" onclick="switchMode('dashboard',this)">📊 Dashboard</button>
+  </div>
+  <div class="user-pill"><div class="user-dot"></div> Visual Dept.</div>
+</nav>
+
+<!-- ══════════════════════════════════
+     VIEW HQ
+══════════════════════════════════ -->
+<div id="view-hq" class="view active">
+<div class="container">
+
+  <div id="hq-nueva" class="hq-section">
+    <div class="page-header">
+      <div><div class="page-title">Nueva instrucción de cambio</div><div class="page-sub">Crea y distribuye instrucciones de visual a tus tiendas</div></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="showHQSection('hq-historial')">Ver historial</button>
+        <button class="btn btn-ghost" onclick="showHQSection('hq-reviews')" id="btn-reviews" style="display:none">📸 Aprobar fotos</button>
+      </div>
+    </div>
+
+    <!-- TIPO -->
+    <div class="card">
+      <div class="card-title">Tipo de cambio</div>
+      <div class="tipo-grid">
+        <div class="tipo-card" onclick="selectTipo(this,'Escaparate')"><div class="tipo-icon">🪟</div><div class="tipo-name">Escaparate</div></div>
+        <div class="tipo-card" onclick="selectTipo(this,'Implantación')"><div class="tipo-icon">🗂️</div><div class="tipo-name">Implantación</div></div>
+        <div class="tipo-card" onclick="selectTipo(this,'Rotaciones')"><div class="tipo-icon">🔄</div><div class="tipo-name">Rotaciones</div></div>
+        <div class="tipo-card" onclick="selectTipo(this,'Destacados')"><div class="tipo-icon">⭐</div><div class="tipo-name">Prod. Destacados</div></div>
+      </div>
+    </div>
+
+    <!-- DATOS -->
+    <div class="card">
+      <div class="card-title">Datos generales</div>
+      <div class="form-row cols-3">
+        <div class="form-group"><label>Título de la instrucción</label><input type="text" id="inst-titulo" placeholder="Ej: Escaparate Verano Semana 23"></div>
+        <div class="form-group"><label>Fecha máxima de ejecución</label><input type="date" id="inst-fecha"></div>
+        <div class="form-group"><label>Prioridad</label><select id="inst-prioridad"><option value="normal">Normal</option><option value="urgente">Urgente</option><option value="baja">Baja</option></select></div>
+      </div>
+      <div class="form-group"><label>Comentarios / Briefing visual</label><textarea id="inst-comentarios" placeholder="Describe el concepto, referencias de estilo, indicaciones de montaje..."></textarea></div>
+    </div>
+
+    <!-- TIENDAS -->
+    <div class="card">
+      <div class="card-title">Grupo de tiendas destinatarias</div>
+      <div class="tiendas-grid" id="tiendas-grid">
+        <div class="tienda-chip select-all" onclick="toggleAllTiendas(this)">Todas las tiendas</div>
+        <div class="tienda-chip" onclick="toggleTienda(this)" data-id="t1">Serrano</div>
+        <div class="tienda-chip" onclick="toggleTienda(this)" data-id="t2">Ourense</div>
+        <div class="tienda-chip" onclick="toggleTienda(this)" data-id="t3">Pontevedra</div>
+        <div class="tienda-chip" onclick="toggleTienda(this)" data-id="t4">A Coruña</div>
+        <div class="tienda-chip" onclick="toggleTienda(this)" data-id="t5">Vigo</div>
+        <div class="tienda-chip" onclick="toggleTienda(this)" data-id="t6">Santiago</div>
+        <div class="tienda-chip" onclick="toggleTienda(this)" data-id="t7">Bilbao</div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DINÁMICA: Escaparate = maniquíes / Otros = imágenes + refs -->
+    <div id="hq-escaparate-section" style="display:none;">
+      <div class="card">
+        <div class="card-title">Maniquíes — looks de referencia</div>
+        <p style="font-size:12px;color:var(--slate);margin-bottom:16px;">Sube la foto y escanea las referencias de cada maniquí. Las tiendas verán todos pero solo colocarán los que les correspondan.</p>
+        <div id="maniqi-editor"></div>
+      </div>
+    </div>
+
+    <div id="hq-otros-section" style="display:none;">
+      <div class="card">
+        <div class="card-title">Imágenes de referencia visual</div>
+        <div class="dropzone" onclick="document.getElementById('img-input').click()">
+          <input type="file" id="img-input" accept="image/*" multiple onchange="handleImagenesGenerales(event)" style="display:none">
+          <div class="dropzone-icon">📷</div>
+          <div class="dropzone-text">Arrastra imágenes o haz clic para subir</div>
+          <div class="dropzone-sub">JPG, PNG, HEIC</div>
+        </div>
+        <div class="img-preview-grid" id="img-preview"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Referencias de producto</div>
+        <table class="refs-table"><thead><tr><th>#</th><th>Referencia</th><th>Descripción</th><th>Talla/Color</th><th>Posición</th><th></th></tr></thead>
+        <tbody id="refs-tbody"><tr><td colspan="6" class="no-data" style="padding:14px 10px;">Sin referencias. Escanea con PDA o introduce manualmente.</td></tr></tbody></table>
+        <div class="scan-row">
+          <input type="text" id="scan-input" placeholder="Referencia (Enter para añadir)" onkeydown="if(event.key==='Enter')addRef()">
+          <input type="text" id="scan-desc" placeholder="Descripción" style="max-width:200px">
+          <button class="btn-scan" onclick="addRef()">📡 Añadir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-bar">
+      <button class="btn btn-ghost" onclick="clearForm()">Limpiar</button>
+      <button class="btn btn-primary" onclick="publicarInstruccion()">Publicar instrucción →</button>
+    </div>
+  </div>
+
+  <!-- HISTORIAL HQ -->
+  <div id="hq-historial" class="hq-section" style="display:none;">
+    <div class="page-header">
+      <div><div class="page-title">Historial de instrucciones</div><div class="page-sub">Seguimiento y estado de cumplimiento por tienda</div></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="showHQSection('hq-reviews')">📸 Aprobar fotos</button>
+        <button class="btn btn-primary" onclick="showHQSection('hq-nueva')">+ Nueva instrucción</button>
+      </div>
+    </div>
+    <div id="historial-hq-content"></div>
+  </div>
+
+  <!-- PANEL REVIEWS -->
+  <div id="hq-reviews" class="hq-section" style="display:none;">
+    <div class="page-header">
+      <div><div class="page-title">Revisión de fotos finales</div><div class="page-sub">Aprueba o solicita corrección de las fotos enviadas por las tiendas</div></div>
+      <button class="btn btn-ghost" onclick="showHQSection('hq-historial')">← Historial</button>
+    </div>
+    <div id="reviews-content"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════════════════════════════
+     VIEW TIENDA
+══════════════════════════════════ -->
+<div id="view-tienda" class="view">
+<div class="container">
+  <div id="tienda-selector">
+    <div class="tienda-selector-wrap">
+      <div style="font-size:36px;margin-bottom:16px;">🏪</div>
+      <h2>Acceso tienda</h2>
+      <p>Selecciona tu tienda para ver las instrucciones de visual asignadas</p>
+      <div class="tienda-select-grid" id="tienda-select-list"></div>
+    </div>
+  </div>
+  <div id="tienda-content" style="display:none;">
+    <div class="page-header">
+      <div><div class="page-title" id="tienda-nombre-header">—</div><div class="page-sub">Instrucciones de visual pendientes y completadas</div></div>
+      <button class="btn btn-ghost" onclick="salirTienda()">← Cambiar tienda</button>
+    </div>
+    <div id="tienda-instrucciones-list"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════
+     VIEW DASHBOARD
+══════════════════════════════════ -->
+<div id="view-dashboard" class="view">
+<div class="container">
+  <div class="page-header">
+    <div><div class="page-title">Dashboard Visual</div><div class="page-sub">Métricas de ejecución y seguimiento de cambios</div></div>
+    <button class="btn btn-ghost" onclick="renderDashboard()">↺ Actualizar</button>
+  </div>
+  <div class="stat-row">
+    <div class="stat-card"><div class="stat-label">Instrucciones activas</div><div class="stat-value" id="ds-activas">—</div><div class="stat-sub">en total</div></div>
+    <div class="stat-card"><div class="stat-label">Tiendas ejecutadas</div><div class="stat-value" id="ds-ejecutadas">—</div><div class="stat-sub">confirmaciones recibidas</div></div>
+    <div class="stat-card"><div class="stat-label">Fotos pendientes OK</div><div class="stat-value" id="ds-fotospend">—</div><div class="stat-sub">por aprobar</div></div>
+    <div class="stat-card"><div class="stat-label">Tasa cumplimiento</div><div class="stat-value" id="ds-tasa">—</div><div class="stat-sub">prendas colocadas</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Detalle por instrucción</div>
+    <div id="dash-table-wrap"></div>
+  </div>
+</div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════
+// CONSTANTS
+// ══════════════════════════════════
+const TIENDAS = [
+  { id:'t1', nombre:'Serrano' },
+  { id:'t2', nombre:'Ourense' },
+  { id:'t3', nombre:'Pontevedra' },
+  { id:'t4', nombre:'A Coruña' },
+  { id:'t5', nombre:'Vigo' },
+  { id:'t6', nombre:'Santiago' },
+  { id:'t7', nombre:'Bilbao' },
+];
+
+const MANIQUIES_DEF = [
+  { id:'m1', tipo:'chica', num:1, label:'Chica 1' },
+  { id:'m2', tipo:'chica', num:2, label:'Chica 2' },
+  { id:'m3', tipo:'chica', num:3, label:'Chica 3' },
+  { id:'m4', tipo:'chica', num:4, label:'Chica 4' },
+  { id:'m5', tipo:'chica', num:5, label:'Chica 5' },
+  { id:'m6', tipo:'chico', num:1, label:'Chico 1' },
+  { id:'m7', tipo:'chico', num:2, label:'Chico 2' },
+  { id:'m8', tipo:'chico', num:3, label:'Chico 3' },
+  { id:'m9', tipo:'chico', num:4, label:'Chico 4' },
+  { id:'m10', tipo:'bodegon', num:1, label:'Bodegón 1' },
+  { id:'m11', tipo:'bodegon', num:2, label:'Bodegón 2' },
+];
+
+const MOTIVOS_NO = ['Sin stock','Prenda dañada','No cuadra con el concepto','Talla incorrecta disponible','Instrucción recibida tarde','Otro'];
+
+// ══════════════════════════════════
+// STATE
+// ══════════════════════════════════
+let state = {
+  tipo: null,
+  tiendas: [],
+  imagenes: [],
+  refs: [],
+  maniquies: {}, // mid -> { imagen, refs:[] }
+  instrucciones: []
+};
+
+let currentTienda = null;
+
+function loadState() {
+  try { const s = localStorage.getItem('rv_visual_v3'); if(s) state.instrucciones = JSON.parse(s); } catch(e){}
+}
+function saveState() {
+  localStorage.setItem('rv_visual_v3', JSON.stringify(state.instrucciones));
+}
+
+// ══════════════════════════════════
+// NAV
+// ══════════════════════════════════
+function switchMode(mode, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-'+mode).classList.add('active');
+  btn.classList.add('active');
+  if(mode==='tienda') renderTiendaSelector();
+  if(mode==='dashboard') renderDashboard();
+  if(mode==='hq') updateReviewBadge();
+}
+
+function showHQSection(id) {
+  document.querySelectorAll('.hq-section').forEach(s => s.style.display='none');
+  document.getElementById(id).style.display='';
+  if(id==='hq-historial') renderHistorialHQ();
+  if(id==='hq-reviews') renderReviews();
+}
+
+function updateReviewBadge() {
+  const pendingReviews = state.instrucciones.reduce((acc, ins) => {
+    return acc + Object.values(ins.respuestas||{}).filter(r => r.fotosFinales?.length && r.aprobacionFotos === 'pending').length;
+  }, 0);
+  const btn = document.getElementById('btn-reviews');
+  if(btn) {
+    btn.style.display = pendingReviews > 0 ? '' : 'none';
+    btn.textContent = `📸 Aprobar fotos ${pendingReviews>0?'('+pendingReviews+')':''}`;
+  }
+}
+
+// ══════════════════════════════════
+// TIPO
+// ══════════════════════════════════
+function selectTipo(el, tipo) {
+  document.querySelectorAll('.tipo-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.tipo = tipo;
+  document.getElementById('hq-escaparate-section').style.display = tipo==='Escaparate' ? '' : 'none';
+  document.getElementById('hq-otros-section').style.display = tipo!=='Escaparate' ? '' : 'none';
+  if(tipo==='Escaparate') renderManiquiEditor();
+}
+
+// ══════════════════════════════════
+// MANIQUÍES EDITOR (HQ)
+// ══════════════════════════════════
+function initManiquies() {
+  state.maniquies = {};
+  MANIQUIES_DEF.forEach(m => { state.maniquies[m.id] = { imagen: null, refs: [] }; });
+}
+
+function renderManiquiEditor() {
+  const wrap = document.getElementById('maniqi-editor');
+  const groups = [
+    { tipo:'chica', label:'👗 Maniquíes Chica (5)', color:'mn-chica' },
+    { tipo:'chico', label:'👔 Maniquíes Chico (4)', color:'mn-chico' },
+    { tipo:'bodegon', label:'🖼️ Bodegones (2)', color:'mn-bodegon' },
+  ];
+
+  let html = '';
+  groups.forEach(g => {
+    const mqs = MANIQUIES_DEF.filter(m => m.tipo === g.tipo);
+    html += `<div class="maniqi-section">
+      <div class="maniqi-group-label">${g.label}</div>
+      <div class="maniqi-grid">`;
+    mqs.forEach(m => {
+      const data = state.maniquies[m.id] || { imagen: null, refs: [] };
+      const imgHTML = data.imagen
+        ? `<img src="${data.imagen}"><button class="maniqi-img-del" onclick="delManiquiImg('${m.id}',event)">×</button>`
+        : `<div class="slot-icon">📷</div><div class="slot-text">Subir foto</div>`;
+      const refsHTML = (data.refs||[]).map((r,i) => `
+        <div class="maniqi-ref-row">
+          <input type="text" value="${r}" placeholder="Ref. prenda ${i+1}" onchange="updateManiquiRef('${m.id}',${i},this.value)" onkeydown="if(event.key==='Enter')addManiquiRef('${m.id}')">
+          <button class="maniqi-ref-del" onclick="delManiquiRef('${m.id}',${i})">×</button>
+        </div>`).join('');
+      html += `<div class="maniqi-card">
+        <div class="maniqi-card-header">
+          <div class="maniqi-num ${g.color}">${m.num}</div>
+          ${m.label}
+        </div>
+        <div class="maniqi-card-body">
+          <div class="maniqi-img-slot" onclick="triggerManiquiUpload('${m.id}')" id="slot-${m.id}">${imgHTML}</div>
+          <input type="file" accept="image/*" style="display:none" id="file-${m.id}" onchange="handleManiquiImg('${m.id}',event)">
+          <div class="maniqi-refs-list" id="refs-${m.id}">${refsHTML}</div>
+          <button class="maniqi-ref-add" onclick="addManiquiRef('${m.id}')">+ Añadir referencia</button>
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+function triggerManiquiUpload(mid) {
+  document.getElementById('file-'+mid).click();
+}
+
+function handleManiquiImg(mid, event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    state.maniquies[mid].imagen = e.target.result;
+    const slot = document.getElementById('slot-'+mid);
+    slot.innerHTML = `<img src="${e.target.result}"><button class="maniqi-img-del" onclick="delManiquiImg('${mid}',event)">×</button>`;
+  };
+  r.readAsDataURL(file);
+}
+
+function delManiquiImg(mid, event) {
+  event.stopPropagation();
+  state.maniquies[mid].imagen = null;
+  const slot = document.getElementById('slot-'+mid);
+  slot.innerHTML = `<div class="slot-icon">📷</div><div class="slot-text">Subir foto</div>`;
+}
+
+function addManiquiRef(mid) {
+  if(!state.maniquies[mid]) state.maniquies[mid] = { imagen: null, refs: [] };
+  state.maniquies[mid].refs.push('');
+  refreshManiquiRefs(mid);
+}
+
+function delManiquiRef(mid, idx) {
+  state.maniquies[mid].refs.splice(idx,1);
+  refreshManiquiRefs(mid);
+}
+
+function updateManiquiRef(mid, idx, val) {
+  state.maniquies[mid].refs[idx] = val.trim().toUpperCase();
+}
+
+function refreshManiquiRefs(mid) {
+  const data = state.maniquies[mid];
+  const wrap = document.getElementById('refs-'+mid);
+  wrap.innerHTML = (data.refs||[]).map((r,i) => `
+    <div class="maniqi-ref-row">
+      <input type="text" value="${r}" placeholder="Ref. prenda ${i+1}" onchange="updateManiquiRef('${mid}',${i},this.value)" onkeydown="if(event.key==='Enter')addManiquiRef('${mid}')">
+      <button class="maniqi-ref-del" onclick="delManiquiRef('${mid}',${i})">×</button>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════
+// IMÁGENES GENERALES
+// ══════════════════════════════════
+function handleImagenesGenerales(event) {
+  Array.from(event.target.files).forEach(file => {
+    const r = new FileReader();
+    r.onload = e => { state.imagenes.push({ name: file.name, data: e.target.result }); renderImagePreview(); };
+    r.readAsDataURL(file);
+  });
+}
+function renderImagePreview() {
+  document.getElementById('img-preview').innerHTML = state.imagenes.map((img,i) => `
+    <div class="img-preview-wrap">
+      <img src="${img.data}" onclick="openLightbox('${img.data}')">
+      <button class="img-preview-del" onclick="removeImage(${i})">×</button>
+      <div class="img-caption">${img.name.replace(/\.[^.]+$/,'')}</div>
+    </div>`).join('');
+}
+function removeImage(i) { state.imagenes.splice(i,1); renderImagePreview(); }
+
+// ══════════════════════════════════
+// REFS
+// ══════════════════════════════════
+function addRef() {
+  const ri = document.getElementById('scan-input');
+  const di = document.getElementById('scan-desc');
+  const ref = ri.value.trim().toUpperCase();
+  if(!ref) return;
+  state.refs.push({ ref, desc: di.value.trim() });
+  ri.value=''; di.value=''; ri.focus();
+  renderRefs();
+}
+function removeRef(i) { state.refs.splice(i,1); renderRefs(); }
+function renderRefs() {
+  const tbody = document.getElementById('refs-tbody');
+  if(!state.refs.length) { tbody.innerHTML='<tr><td colspan="6" class="no-data" style="padding:14px 10px;">Sin referencias.</td></tr>'; return; }
+  tbody.innerHTML = state.refs.map((r,i) => `<tr>
+    <td style="color:var(--slate);font-size:12px;">${i+1}</td>
+    <td><span class="ref-badge">${r.ref}</span></td>
+    <td>${r.desc||'—'}</td>
+    <td><input type="text" placeholder="Talla/Color" style="width:90px;font-size:12px;padding:5px 8px;" value="${r.talla||''}" onchange="state.refs[${i}].talla=this.value"></td>
+    <td><input type="text" placeholder="Pos." style="width:60px;font-size:12px;padding:5px 8px;" value="${r.posicion||''}" onchange="state.refs[${i}].posicion=this.value"></td>
+    <td><button class="ref-del" onclick="removeRef(${i})">×</button></td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════
+// TIENDAS SELECTOR
+// ══════════════════════════════════
+function toggleTienda(el) {
+  const id = el.dataset.id;
+  if(el.classList.contains('selected')) { el.classList.remove('selected'); state.tiendas = state.tiendas.filter(t=>t!==id); }
+  else { el.classList.add('selected'); state.tiendas.push(id); }
+  document.querySelector('.select-all').classList.remove('selected');
+}
+function toggleAllTiendas(el) {
+  if(el.classList.contains('selected')) { el.classList.remove('selected'); document.querySelectorAll('.tienda-chip:not(.select-all)').forEach(c=>c.classList.remove('selected')); state.tiendas=[]; }
+  else { el.classList.add('selected'); state.tiendas=TIENDAS.map(t=>t.id); document.querySelectorAll('.tienda-chip:not(.select-all)').forEach(c=>c.classList.add('selected')); }
+}
+
+// ══════════════════════════════════
+// PUBLICAR
+// ══════════════════════════════════
+function publicarInstruccion() {
+  const titulo = document.getElementById('inst-titulo').value.trim();
+  const fecha  = document.getElementById('inst-fecha').value;
+  const comentarios = document.getElementById('inst-comentarios').value.trim();
+  const prioridad   = document.getElementById('inst-prioridad').value;
+
+  if(!state.tipo) return showToast('Selecciona el tipo de cambio','error');
+  if(!titulo)     return showToast('Introduce un título','error');
+  if(!state.tiendas.length) return showToast('Selecciona al menos una tienda','error');
+
+  const ins = {
+    id: 'INS-'+Date.now(),
+    tipo: state.tipo,
+    titulo, fecha, comentarios, prioridad,
+    tiendas: [...state.tiendas],
+    createdAt: new Date().toISOString(),
+    respuestas: {}
+  };
+
+  if(state.tipo === 'Escaparate') {
+    ins.maniquies = JSON.parse(JSON.stringify(state.maniquies));
+  } else {
+    ins.imagenes = [...state.imagenes];
+    ins.refs = state.refs.map(r=>({...r}));
+  }
+
+  state.instrucciones.unshift(ins);
+  saveState();
+  showToast('Instrucción publicada ✓','success');
+  clearForm();
+  updateReviewBadge();
+}
+
+function clearForm() {
+  state.tipo=null; state.tiendas=[]; state.imagenes=[]; state.refs=[];
+  initManiquies();
+  document.querySelectorAll('.tipo-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.tienda-chip').forEach(c=>c.classList.remove('selected'));
+  ['inst-titulo','inst-fecha','inst-comentarios'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('inst-prioridad').value='normal';
+  document.getElementById('hq-escaparate-section').style.display='none';
+  document.getElementById('hq-otros-section').style.display='none';
+  const ip = document.getElementById('img-preview'); if(ip) ip.innerHTML='';
+  renderRefs();
+  document.getElementById('inst-fecha').value = new Date().toISOString().split('T')[0];
+}
+
+// ══════════════════════════════════
+// HISTORIAL HQ
+// ══════════════════════════════════
+function renderHistorialHQ() {
+  const wrap = document.getElementById('historial-hq-content');
+  if(!state.instrucciones.length) {
+    wrap.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><h3>Sin instrucciones todavía</h3><p>Crea tu primera instrucción.</p></div>`; return;
+  }
+  let html = `<div class="card"><table class="hist-table"><thead><tr>
+    <th>ID</th><th>Tipo</th><th>Título</th><th>Fecha</th><th>Tiendas</th><th>Progreso</th><th>Fotos</th><th>Estado</th>
+  </tr></thead><tbody>`;
+  state.instrucciones.forEach(ins => {
+    const total = ins.tiendas.length;
+    const done = ins.tiendas.filter(tid => ins.respuestas[tid]?.done).length;
+    const pct = total ? Math.round(done/total*100) : 0;
+    const fotasPend = Object.values(ins.respuestas).filter(r=>r.fotosFinales?.length && r.aprobacionFotos==='pending').length;
+    const fotasOK   = Object.values(ins.respuestas).filter(r=>r.aprobacionFotos==='approved').length;
+    const badge = done===total&&total>0 ? `<span class="badge badge-done">Completada</span>` : done>0 ? `<span class="badge badge-pending">En curso</span>` : `<span class="badge badge-new">Pendiente</span>`;
+    const fotaBadge = fotasPend>0 ? `<span class="badge badge-review">${fotasPend} pendiente${fotasPend>1?'s':''}</span>` : fotasOK>0 ? `<span class="badge badge-approved">${fotasOK} ✓</span>` : `<span style="color:var(--mid);font-size:11px;">—</span>`;
+    html+=`<tr onclick="verDetalleHQ('${ins.id}')" style="cursor:pointer;">
+      <td style="font-size:11px;color:var(--slate);">${ins.id.replace('INS-','')}</td>
+      <td><span class="tipo-pill tipo-${ins.tipo}">${ins.tipo}</span></td>
+      <td><strong>${ins.titulo}</strong></td>
+      <td style="font-size:12px;">${ins.fecha||'—'}</td>
+      <td style="font-size:12px;color:var(--slate);">${ins.tiendas.map(tid=>TIENDAS.find(t=>t.id===tid)?.nombre||tid).join(', ')}</td>
+      <td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div><span style="font-size:11px;color:var(--slate);">${done}/${total}</span></div></td>
+      <td>${fotaBadge}</td>
+      <td>${badge}</td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  wrap.innerHTML=html;
+}
+
+function verDetalleHQ(id) {
+  const ins = state.instrucciones.find(i=>i.id===id);
+  if(!ins) return;
+  let html = `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div><span class="tipo-pill tipo-${ins.tipo}">${ins.tipo}</span> <strong style="margin-left:8px;">${ins.titulo}</strong></div>
+      <button class="btn btn-ghost" onclick="renderHistorialHQ()">← Volver</button>
+    </div>
+    ${ins.comentarios?`<div style="background:var(--sand);border-radius:6px;padding:12px;font-size:13px;margin-bottom:16px;">${ins.comentarios}</div>`:''}
+    <div class="card-title">Respuestas por tienda</div>`;
+
+  ins.tiendas.forEach(tid => {
+    const tiendaNombre = TIENDAS.find(t=>t.id===tid)?.nombre||tid;
+    const resp = ins.respuestas[tid];
+    html += `<div style="padding:12px 0;border-bottom:1px solid var(--sand);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <strong>${tiendaNombre}</strong>
+        ${!resp ? '<span class="badge badge-new">Sin respuesta</span>' : resp.done ? `<span class="badge badge-done">Ejecutado · ${new Date(resp.fechaCambio).toLocaleDateString('es-ES')}</span>` : '<span class="badge badge-pending">En progreso</span>'}
+      </div>`;
+    if(resp) {
+      // fotos finales
+      if(resp.fotosFinales?.length) {
+        html += `<div style="margin-top:6px;"><div style="font-size:11px;font-weight:600;color:var(--slate);margin-bottom:6px;">FOTOS FINALES</div>
+          <div class="review-fotos-grid">${resp.fotosFinales.map(f=>`<div class="review-foto-wrap"><img src="${f}" onclick="openLightbox('${f}')"></div>`).join('')}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+            ${resp.aprobacionFotos==='approved' ? '<span class="badge badge-approved">✓ Aprobadas</span>' : resp.aprobacionFotos==='rejected' ? '<span class="badge badge-rejected">Corrección solicitada</span>' : `<button class="btn-ok" onclick="aprobarFotos('${id}','${tid}')">✓ Aprobar</button><button class="btn-reject" onclick="rechazarFotos('${id}','${tid}')">Pedir corrección</button>`}
+          </div>
+        </div>`;
+      }
+      // maniquíes respuestas (escaparate)
+      if(ins.tipo==='Escaparate' && resp.maniquies) {
+        const incluidos = Object.entries(resp.maniquies).filter(([,v])=>v.incluido);
+        html += `<div style="font-size:12px;color:var(--slate);margin-top:4px;">Maniquíes incluidos: ${incluidos.map(([mid])=>MANIQUIES_DEF.find(m=>m.id===mid)?.label||mid).join(', ')||'—'}</div>`;
+      }
+      if(resp.notas) html += `<div class="review-nota">"${resp.notas}"</div>`;
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  document.getElementById('historial-hq-content').innerHTML = html;
+}
+
+function aprobarFotos(insId, tid) {
+  const ins = state.instrucciones.find(i=>i.id===insId);
+  if(ins?.respuestas[tid]) { ins.respuestas[tid].aprobacionFotos = 'approved'; saveState(); }
+  renderHistorialHQ(); updateReviewBadge(); showToast('Fotos aprobadas ✓','success');
+}
+function rechazarFotos(insId, tid) {
+  const nota = prompt('¿Qué corrección se solicita?');
+  const ins = state.instrucciones.find(i=>i.id===insId);
+  if(ins?.respuestas[tid]) { ins.respuestas[tid].aprobacionFotos = 'rejected'; ins.respuestas[tid].notaRechazo = nota||''; saveState(); }
+  renderHistorialHQ(); updateReviewBadge(); showToast('Corrección solicitada','');
+}
+
+// ══════════════════════════════════
+// PANEL REVIEWS (HQ)
+// ══════════════════════════════════
+function renderReviews() {
+  const wrap = document.getElementById('reviews-content');
+  let items = [];
+  state.instrucciones.forEach(ins => {
+    ins.tiendas.forEach(tid => {
+      const resp = ins.respuestas[tid];
+      if(resp?.fotosFinales?.length && resp.aprobacionFotos === 'pending') {
+        items.push({ ins, tid, resp });
+      }
+    });
+  });
+  if(!items.length) { wrap.innerHTML=`<div class="empty-state"><div class="empty-icon">✅</div><h3>Todo al día</h3><p>No hay fotos pendientes de revisión.</p></div>`; return; }
+  wrap.innerHTML = items.map(({ins,tid,resp}) => {
+    const tiendaNombre = TIENDAS.find(t=>t.id===tid)?.nombre||tid;
+    return `<div class="review-item">
+      <div class="review-item-header">
+        <div><span class="tipo-pill tipo-${ins.tipo}">${ins.tipo}</span> <strong style="margin-left:8px;">${ins.titulo}</strong> · ${tiendaNombre}</div>
+        <div class="review-actions">
+          <button class="btn-ok" onclick="aprobarFotosRender('${ins.id}','${tid}')">✓ Aprobar</button>
+          <button class="btn-reject" onclick="rechazarFotosRender('${ins.id}','${tid}')">Pedir corrección</button>
+        </div>
+      </div>
+      <div class="review-fotos-grid">${resp.fotosFinales.map(f=>`<div class="review-foto-wrap"><img src="${f}" onclick="openLightbox('${f}')"></div>`).join('')}</div>
+      ${resp.notas?`<div class="review-nota" style="margin-top:8px;">"${resp.notas}"</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function aprobarFotosRender(insId, tid) { aprobarFotos(insId, tid); renderReviews(); }
+function rechazarFotosRender(insId, tid) { rechazarFotos(insId, tid); renderReviews(); }
+
+// ══════════════════════════════════
+// VISTA TIENDA
+// ══════════════════════════════════
+function renderTiendaSelector() {
+  const list = document.getElementById('tienda-select-list');
+  list.innerHTML = TIENDAS.map(t => {
+    const pending = state.instrucciones.filter(ins=>ins.tiendas.includes(t.id)&&!ins.respuestas[t.id]?.done).length;
+    const fotasRechazo = state.instrucciones.filter(ins=>ins.tiendas.includes(t.id)&&ins.respuestas[t.id]?.aprobacionFotos==='rejected').length;
+    const badges = [
+      pending>0 ? `<span class="pending-badge">${pending} pendiente${pending>1?'s':''}</span>` : '',
+      fotasRechazo>0 ? `<span class="pending-badge" style="background:var(--orange);">${fotasRechazo} corrección</span>` : ''
+    ].filter(Boolean).join('');
+    return `<button class="tienda-select-btn" onclick="entrarTienda('${t.id}')">
+      <span>${t.nombre}</span>
+      <span>${badges || '<span style="color:var(--mid);font-size:11px;">Al día ✓</span>'}</span>
+    </button>`;
+  }).join('');
+}
+
+function entrarTienda(tid) {
+  currentTienda = tid;
+  document.getElementById('tienda-selector').style.display='none';
+  document.getElementById('tienda-content').style.display='';
+  document.getElementById('tienda-nombre-header').textContent = TIENDAS.find(t=>t.id===tid)?.nombre||tid;
+  renderTiendaInstrucciones();
+}
+function salirTienda() {
+  currentTienda=null;
+  document.getElementById('tienda-selector').style.display='';
+  document.getElementById('tienda-content').style.display='none';
+  renderTiendaSelector();
+}
+
+function renderTiendaInstrucciones() {
+  const wrap = document.getElementById('tienda-instrucciones-list');
+  const misIns = state.instrucciones.filter(ins=>ins.tiendas.includes(currentTienda));
+  if(!misIns.length) { wrap.innerHTML=`<div class="empty-state"><div class="empty-icon">🎉</div><h3>Sin instrucciones pendientes</h3><p>No hay instrucciones asignadas.</p></div>`; return; }
+
+  wrap.innerHTML = misIns.map(ins => {
+    const resp = ins.respuestas[currentTienda];
+    const done = resp?.done;
+    const statusBadge = done
+      ? (resp.aprobacionFotos==='approved' ? '<span class="badge badge-approved">✓ Fotos aprobadas</span>'
+        : resp.aprobacionFotos==='rejected' ? '<span class="badge badge-rejected">⚠ Corrección solicitada</span>'
+        : resp.fotosFinales?.length ? '<span class="badge badge-review">Fotos enviadas · pendiente OK</span>'
+        : '<span class="badge badge-done">Ejecutado · pendiente foto</span>')
+      : '<span class="badge badge-pending">Pendiente</span>';
+
+    let bodyHTML = buildTiendaBody(ins, resp, done);
+
+    return `<div class="instruccion-card">
+      <div class="instruccion-header" onclick="toggleInstruccion(this)">
+        <div class="instruccion-meta">
+          <span class="tipo-pill tipo-${ins.tipo}">${ins.tipo}</span>
+          <strong>${ins.titulo}</strong>
+          ${ins.prioridad==='urgente'?'<span style="color:var(--red);font-size:11px;font-weight:700;">⚡ URGENTE</span>':''}
+          ${ins.fecha?`<span style="font-size:12px;color:var(--slate);">Hasta: ${ins.fecha}</span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">${statusBadge}<span style="color:var(--slate);font-size:18px;">▾</span></div>
+      </div>
+      <div class="instruccion-body open" id="body-${ins.id}">${bodyHTML}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildTiendaBody(ins, resp, done) {
+  let html = '';
+  const dis = done ? 'pointer-events:none;opacity:0.75;' : '';
+
+  // comentarios
+  if(ins.comentarios) html+=`<div style="background:var(--sand);border-radius:6px;padding:12px;font-size:13px;margin-bottom:16px;line-height:1.6;">${ins.comentarios}</div>`;
+
+  if(ins.tipo==='Escaparate') {
+    html += buildEscaparateBody(ins, resp, done, dis);
+  } else {
+    html += buildOtrosBody(ins, resp, done, dis);
+  }
+
+  // FOTOS FINALES (todas las instrucciones)
+  html += buildFotosFinalesSection(ins, resp, done);
+
+  return html;
+}
+
+function buildEscaparateBody(ins, resp, done, dis) {
+  let html = `<div style="${dis}">`;
+  html += `<div class="card-title">Selecciona los maniquíes que vas a colocar</div>`;
+  html += `<p style="font-size:12px;color:var(--slate);margin-bottom:14px;">Ves todos los maniquíes de la instrucción. Marca solo los que te corresponden. Para cada uno confirma las prendas colocadas.</p>`;
+
+  const mqs = MANIQUIES_DEF;
+  const groups = [
+    { tipo:'chica', label:'👗 Chica', color:'mn-chica' },
+    { tipo:'chico', label:'👔 Chico', color:'mn-chico' },
+    { tipo:'bodegon', label:'🖼️ Bodegón', color:'mn-bodegon' },
+  ];
+
+  groups.forEach(g => {
+    const gMqs = mqs.filter(m=>m.tipo===g.tipo);
+    html += `<div style="margin-bottom:20px;"><div class="maniqi-group-label">${g.label}</div><div class="maniqi-select-grid">`;
+    gMqs.forEach(m => {
+      const mData = ins.maniquies?.[m.id] || { imagen:null, refs:[] };
+      const mResp = resp?.maniquies?.[m.id] || { incluido:false, prendas:[] };
+      const included = mResp.incluido;
+      html += `<div class="maniqi-select-card ${included?'included':''}" id="msc-${ins.id}-${m.id}" onclick="${done?'':'toggleManiqui(\''+ins.id+'\',\''+m.id+'\')'}" style="${done?'cursor:default':''}">
+        <div class="msc-header">
+          <div class="maniqi-num ${g.color}">${m.num}</div>
+          ${m.label}
+          <div class="msc-check">${included?'✓':''}</div>
+        </div>
+        <div class="msc-img">${mData.imagen?`<img src="${mData.imagen}" onclick="openLightbox('${mData.imagen}');event.stopPropagation()">`:'<div class="no-img">📷</div>'}</div>
+        <div class="msc-refs">${(mData.refs||[]).map(r=>`<span class="ref-badge">${r}</span>`).join('')}</div>
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+
+  // prendas de maniquíes incluidos
+  if(resp?.maniquies) {
+    const includidos = MANIQUIES_DEF.filter(m => resp.maniquies[m.id]?.incluido);
+    if(includidos.length) {
+      html += `<div class="card-title" style="margin-top:4px;">Confirmación de prendas por maniquí</div>`;
+      includidos.forEach(m => {
+        const mData = ins.maniquies?.[m.id] || { refs:[] };
+        const mResp = resp.maniquies[m.id];
+        if(!mData.refs?.length) return;
+        html += `<div style="margin-bottom:14px;background:var(--sand);border-radius:8px;padding:12px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:10px;">🧍 ${m.label}</div>`;
+        mData.refs.forEach((ref, ri) => {
+          const pResp = mResp.prendas?.[ri] || {};
+          html += `<div class="prenda-row" style="${dis}">
+            <div class="prenda-num">${ri+1}</div>
+            <div><div class="prenda-ref">${ref}</div></div>
+            <div class="prenda-actions">
+              <div class="radio-row" id="radio-${ins.id}-${m.id}-${ri}">
+                <div class="radio-opt opt-si ${pResp.estado==='si'?'selected':''}" onclick="setPrendaEscaparate('${ins.id}','${m.id}',${ri},'si')">✓ Sí</div>
+                <div class="radio-opt opt-sust ${pResp.estado==='sust'?'selected':''}" onclick="setPrendaEscaparate('${ins.id}','${m.id}',${ri},'sust')">⇄ Sust.</div>
+                <div class="radio-opt opt-no ${pResp.estado==='no'?'selected':''}" onclick="setPrendaEscaparate('${ins.id}','${m.id}',${ri},'no')">✗ No</div>
+              </div>
+              <div class="sub-input ${pResp.estado==='sust'?'visible':''}" id="sust-${ins.id}-${m.id}-${ri}">
+                <input type="text" placeholder="Ref. sustituta" value="${pResp.sustRef||''}" onchange="setManiquiPrendaSub('${ins.id}','${m.id}',${ri},'sustRef',this.value)">
+              </div>
+              <div class="sub-input ${pResp.estado==='no'?'visible':''}" id="motivo-${ins.id}-${m.id}-${ri}">
+                <select onchange="setManiquiPrendaSub('${ins.id}','${m.id}',${ri},'motivo',this.value)">
+                  <option value="">Motivo...</option>
+                  ${MOTIVOS_NO.map(mo=>`<option ${pResp.motivo===mo?'selected':''}>${mo}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+          </div>`;
+        });
+        html += '</div>';
+      });
+    }
+  }
+
+  if(!done) {
+    html += `<div style="margin-top:12px;"><label>Notas adicionales</label><textarea id="notas-${ins.id}" rows="2" placeholder="Incidencias, comentarios...">${resp?.notas||''}</textarea></div>`;
+    html += `<div class="confirm-bar" style="margin-top:16px;">
+      <div><strong>Confirmar cambio realizado</strong><p>Registra fecha y hora de ejecución</p></div>
+      <button class="btn btn-success" onclick="confirmarCambio('${ins.id}')">Confirmar ✓</button>
+    </div>`;
+  } else {
+    html += `<div class="confirm-bar" style="background:var(--green);margin-top:16px;">
+      <div><strong>Cambio confirmado</strong><p>${new Date(resp.fechaCambio).toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})}</p></div>
+      <span style="font-size:24px;">✓</span>
+    </div>`;
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function buildOtrosBody(ins, resp, done, dis) {
+  let html = `<div style="${dis}">`;
+
+  // imágenes referencia
+  if(ins.imagenes?.length) {
+    html+=`<div class="card-title">Imágenes de referencia</div><div class="img-preview-grid" style="margin-bottom:16px;">${ins.imagenes.map(img=>`<div class="img-preview-wrap"><img src="${img.data}" onclick="openLightbox('${img.data}')"><div class="img-caption">${img.name.replace(/\.[^.]+$/,'')}</div></div>`).join('')}</div>`;
+  }
+
+  // refs / prendas
+  if(ins.refs?.length) {
+    html+=`<div class="card-title">Prendas a colocar</div>`;
+    ins.refs.forEach((r,i) => {
+      const pResp = resp?.prendas?.[i]||{};
+      html+=`<div class="prenda-row" style="${dis}">
+        <div class="prenda-num">${i+1}</div>
+        <div><div class="prenda-ref">${r.ref}</div><div class="prenda-desc">${r.desc||''}${r.talla?' · '+r.talla:''}${r.posicion?' · Pos: '+r.posicion:''}</div></div>
+        <div class="prenda-actions">
+          <div class="radio-row" id="radio-${ins.id}-${i}">
+            <div class="radio-opt opt-si ${pResp.estado==='si'?'selected':''}" onclick="setPrendaEstado('${ins.id}',${i},'si')">✓ Sí</div>
+            <div class="radio-opt opt-sust ${pResp.estado==='sust'?'selected':''}" onclick="setPrendaEstado('${ins.id}',${i},'sust')">⇄ Sust.</div>
+            <div class="radio-opt opt-no ${pResp.estado==='no'?'selected':''}" onclick="setPrendaEstado('${ins.id}',${i},'no')">✗ No</div>
+          </div>
+          <div class="sub-input ${pResp.estado==='sust'?'visible':''}" id="sust-${ins.id}-${i}">
+            <input type="text" placeholder="Ref. sustituta" value="${pResp.sustRef||''}" onchange="setPrendaSub('${ins.id}',${i},'sustRef',this.value)">
+          </div>
+          <div class="sub-input ${pResp.estado==='no'?'visible':''}" id="motivo-${ins.id}-${i}">
+            <select onchange="setPrendaSub('${ins.id}',${i},'motivo',this.value)">
+              <option value="">Motivo...</option>
+              ${MOTIVOS_NO.map(mo=>`<option ${pResp.motivo===mo?'selected':''}>${mo}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  if(!done) {
+    html+=`<div style="margin-top:12px;"><label>Notas adicionales</label><textarea id="notas-${ins.id}" rows="2" placeholder="Incidencias, comentarios...">${resp?.notas||''}</textarea></div>`;
+    html+=`<div class="confirm-bar" style="margin-top:16px;"><div><strong>Confirmar cambio realizado</strong><p>Registra fecha y hora de ejecución</p></div><button class="btn btn-success" onclick="confirmarCambio('${ins.id}')">Confirmar ✓</button></div>`;
+  } else {
+    html+=`<div class="confirm-bar" style="background:var(--green);margin-top:16px;"><div><strong>Cambio confirmado</strong><p>${new Date(resp.fechaCambio).toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})}</p></div><span style="font-size:24px;">✓</span></div>`;
+  }
+
+  html+='</div>';
+  return html;
+}
+
+function buildFotosFinalesSection(ins, resp, done) {
+  if(!done) return '';
+
+  const aprobacion = resp?.aprobacionFotos;
+  const fotos = resp?.fotosFinales || [];
+
+  let statusHTML = '';
+  if(aprobacion==='approved') statusHTML = `<span class="badge badge-approved">✓ Fotos aprobadas por Visual</span>`;
+  else if(aprobacion==='rejected') {
+    statusHTML = `<div><span class="badge badge-rejected">⚠ Corrección solicitada</span>${resp.notaRechazo?`<p style="font-size:12px;color:var(--slate);margin-top:6px;font-style:italic;">Indicación: "${resp.notaRechazo}"</p>`:''}</div>`;
+  } else if(fotos.length) statusHTML = `<span class="badge badge-review">Enviadas · pendiente aprobación de Visual</span>`;
+  else statusHTML = `<span style="font-size:12px;color:var(--slate);">Sube las fotos del resultado final para que el equipo de Visual las apruebe</span>`;
+
+  const inputId = `fotos-final-input-${ins.id}`;
+  return `<div class="fotos-finales-section">
+    <h4>📸 Fotos del resultado final</h4>
+    ${statusHTML}
+    ${aprobacion!=='approved' ? `
+      <div class="fotos-grid-mini" id="fotos-grid-${ins.id}">${fotos.map((f,fi)=>`<div class="foto-mini-wrap"><img src="${f}" onclick="openLightbox('${f}')"><button class="foto-mini-del" onclick="deleteFotoFinal('${ins.id}',${fi})">×</button></div>`).join('')}</div>
+      <div style="margin-top:10px;">
+        <div class="fotos-upload-mini" onclick="document.getElementById('${inputId}').click()">
+          <input type="file" id="${inputId}" accept="image/*" multiple style="display:none" onchange="handleFotosFinales('${ins.id}',event)">
+          📷 ${fotos.length?'Añadir más fotos':'Subir fotos del resultado'}
+        </div>
+      </div>
+      ${fotos.length && aprobacion==='pending' ? '' : fotos.length ? `<div style="margin-top:10px;text-align:right;"><button class="btn btn-primary" onclick="enviarFotos('${ins.id}')">Enviar a Visual →</button></div>` : ''}
+    ` : `<div class="fotos-grid-mini">${fotos.map(f=>`<div class="foto-mini-wrap"><img src="${f}" onclick="openLightbox('${f}')"></div>`).join('')}</div>`}
+  </div>`;
+}
+
+// ══════════════════════════════════
+// TIENDA ACTIONS
+// ══════════════════════════════════
+function toggleManiqui(insId, mid) {
+  const ins = state.instrucciones.find(i=>i.id===insId);
+  if(!ins.respuestas[currentTienda]) ins.respuestas[currentTienda] = { maniquies:{}, done:false, notas:'', fotosFinales:[], aprobacionFotos:null };
+  if(!ins.respuestas[currentTienda].maniquies) ins.respuestas[currentTienda].maniquies = {};
+  const mResp = ins.respuestas[currentTienda].maniquies;
+  if(!mResp[mid]) mResp[mid] = { incluido:false, prendas:[] };
+  mResp[mid].incluido = !mResp[mid].incluido;
+  saveState();
+  renderTiendaInstrucciones();
+}
+
+function setPrendaEscaparate(insId, mid, ri, estado) {
+  const ins = state.instrucciones.find(i=>i.id===insId);
+  const mResp = ins.respuestas[currentTienda]?.maniquies?.[mid];
+  if(!mResp) return;
+  if(!mResp.prendas) mResp.prendas=[];
+  while(mResp.prendas.length<=ri) mResp.prendas.push({estado:null});
+  mResp.prendas[ri].estado = estado;
+  saveState();
+  document.querySelectorAll(`#radio-${insId}-${mid}-${ri} .radio-opt`).forEach(el=>el.classList.remove('selected'));
+  document.querySelector(`#radio-${insId}-${mid}-${ri} .opt-${estado}`)?.classList.add('selected');
+  document.getElementById(`sust-${insId}-${mid}-${ri}`)?.classList.toggle('visible', estado==='sust');
+  document.getElementById(`motivo-${insId}-${mid}-${ri}`)?.classList.toggle('visible', estado==='no');
+}
+
+function setManiquiPrendaSub(insId, mid, ri, field, val) {
+  const ins = state.instrucciones.find(i=>i.id===insId);
+  const mResp = ins.respuestas[currentTienda]?.maniquies?.[mid];
+  if(!mResp?.prendas?.[ri]) return;
+  mResp.prendas[ri][field]=val; saveState();
+}
+
+function setPrendaEstado(insId, idx, estado) {
+  const ins = state.instrucciones.find(i=>i.id===insId);
+  if(!ins.respuestas[currentTienda]) ins.respuestas[currentTienda]={prendas:[],done:false,notas:'',fotosFinales:[],aprobacionFotos:null};
+  while(ins.respuestas[currentTienda].prendas.length<=idx) ins.respuestas[currentTienda].prendas.push({estado:null});
+  ins.respuestas[currentTienda].prendas[idx].estado=estado; saveState();
+  document.querySelectorAll(`#radio-${insId}-${idx} .radio-opt`).forEach(el=>el.classList.remove('selected'));
+  document.querySelector(`#radio-${insId}-${idx} .opt-${estado}`)?.classList.add('selected');
+  document.getElementById(`sust-${insId}-${idx}`)?.classList.toggle('visible',estado==='sust');
+  document.getElementById(`motivo-${insId}-${idx}`)?.classList.toggle('visible',estado==='no');
+}
+
+function setPrendaSub(insId, idx, field, val) {
+  const ins = state.instrucciones.find(i=>i.id===insId);
+  ins.respuestas[currentTienda].prendas[idx][field]=val; saveState();
+}
+
+function confirmarCambio(insId) {
+  const ins = state.instrucciones.find(i=>i.id===insId);
+  const notas = document.getElementById(`notas-${insId}`)?.value||'';
+  if(!ins.respuestas[currentTienda]) ins.respuestas[currentTienda]={prendas:[],maniquies:{},done:false};
+  ins.respuestas[currentTienda].done=true;
+  ins.respuestas[currentTienda].fechaCambio=new Date().toISOString();
+  ins.respuestas[currentTienda].notas=notas;
+  ins.respuestas[currentTienda].fotosFinales = ins.respuestas[currentTienda].fotosFinales||[];
+  ins.respuestas[currentTienda].aprobacionFotos = null;
+  saveState(); updateReviewBadge();
+  showToast('Cambio confirmado y registrado ✓','success');
+  renderTiendaInstrucciones();
+}
+
+function handleFotosFinales(insId, event) {
+  const ins = state.instrucciones.find(i=>i.id===insId);
+  const resp = ins.respuestas[currentTienda];
+  if(!resp.fotosFinales) resp.fotosFinales=[];
+  Array.from(event.target.files).forEach(file => {
+    const r=new FileReader();
+    r.onload=e=>{
+      resp.fotosFinales.push(e.target.result);
+      resp.aprobacionFotos=null;
+      saveState(); updateReviewBadge();
+      // update grid
+      const grid=document.getElementById(`fotos-grid-${insId}`);
+      if(grid) grid.innerHTML=resp.fotosFinales.map((f,fi)=>`<div class="foto-mini-wrap"><img src="${f}" onclick="openLightbox('${f}')"><button class="foto-mini-del" onclick="deleteFotoFinal('${insId}',${fi})">×</button></div>`).join('');
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+function deleteFotoFinal(insId, fi) {
+  const ins = state.instrucciones.find(i=>i.id===insId);
+  ins.respuestas[currentTienda].fotosFinales.splice(fi,1);
+  ins.respuestas[currentTienda].aprobacionFotos=null;
+  saveState(); updateReviewBadge();
+  renderTiendaInstrucciones();
+}
+
+function enviarFotos(insId) {
+  const ins = state.instrucciones.find(i=>i.id===insId);
+  ins.respuestas[currentTienda].aprobacionFotos='pending';
+  saveState(); updateReviewBadge();
+  showToast('Fotos enviadas al equipo de Visual ✓','success');
+  renderTiendaInstrucciones();
+}
+
+// ══════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════
+function renderDashboard() {
+  const ins = state.instrucciones;
+  let totalEjec=0, totalSust=0, totalP=0, totalSi=0, fotasPend=0;
+  ins.forEach(i=>{
+    Object.values(i.respuestas||{}).forEach(r=>{
+      if(r.done) totalEjec++;
+      if(r.fotosFinales?.length&&r.aprobacionFotos==='pending') fotasPend++;
+      (r.prendas||[]).forEach(p=>{totalP++;if(p.estado==='si')totalSi++;if(p.estado==='sust')totalSust++;});
+      Object.values(r.maniquies||{}).forEach(m=>{(m.prendas||[]).forEach(p=>{totalP++;if(p.estado==='si')totalSi++;if(p.estado==='sust')totalSust++;});});
+    });
+  });
+  document.getElementById('ds-activas').textContent=ins.length;
+  document.getElementById('ds-ejecutadas').textContent=totalEjec;
+  document.getElementById('ds-fotospend').textContent=fotasPend;
+  document.getElementById('ds-tasa').textContent=totalP?Math.round(totalSi/totalP*100)+'%':'—';
+
+  let html='';
+  if(!ins.length){html=`<div class="empty-state"><div class="empty-icon">📊</div><h3>Sin datos</h3></div>`;}
+  else{
+    html=`<table class="hist-table"><thead><tr><th>Instrucción</th><th>Tipo</th><th>Fecha</th><th>Tiendas</th><th>Completadas</th><th>Fotos</th></tr></thead><tbody>`;
+    ins.forEach(i=>{
+      const total=i.tiendas.length;
+      const done=i.tiendas.filter(tid=>i.respuestas[tid]?.done).length;
+      const fp=Object.values(i.respuestas||{}).filter(r=>r.fotosFinales?.length&&r.aprobacionFotos==='pending').length;
+      const fa=Object.values(i.respuestas||{}).filter(r=>r.aprobacionFotos==='approved').length;
+      html+=`<tr><td><strong>${i.titulo}</strong></td><td><span class="tipo-pill tipo-${i.tipo}">${i.tipo}</span></td><td style="font-size:12px;">${i.fecha||'—'}</td><td>${total}</td>
+        <td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${total?Math.round(done/total*100):0}%"></div></div><span style="font-size:11px;color:var(--slate);">${done}/${total}</span></div></td>
+        <td>${fp>0?`<span class="badge badge-review">${fp} pend.</span>`:fa>0?`<span class="badge badge-approved">${fa} ✓</span>`:'—'}</td></tr>`;
+    });
+    html+='</tbody></table>';
+  }
+  document.getElementById('dash-table-wrap').innerHTML=html;
+}
+
+// ══════════════════════════════════
+// LIGHTBOX
+// ══════════════════════════════════
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src=src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+
+function toggleInstruccion(header) { header.nextElementSibling.classList.toggle('open'); }
+
+// ══════════════════════════════════
+// TOAST
+// ══════════════════════════════════
+let toastTimer;
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show '+type;
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════
+// INIT
+// ══════════════════════════════════
+loadState();
+initManiquies();
+document.getElementById('inst-fecha').value = new Date().toISOString().split('T')[0];
+updateReviewBadge();
+
+// Demo data
+if(!state.instrucciones.length){
+  state.instrucciones=[{
+    id:'INS-DEMO001',tipo:'Escaparate',titulo:'Escaparate Verano · Semana 23',
+    fecha:new Date().toISOString().split('T')[0],prioridad:'urgente',
+    comentarios:'Paleta coral y arena. Iluminación cálida. Composición: figura central con look completo SS25.',
+    tiendas:['t1','t2','t3'],createdAt:new Date().toISOString(),
+    maniquies:{
+      'm1':{imagen:null,refs:['RV-2025-0431','RV-2025-0210']},
+      'm2':{imagen:null,refs:['RV-2025-0518']},
+      'm3':{imagen:null,refs:['RV-2025-0321','RV-2025-0412']},
+      'm4':{imagen:null,refs:['RV-2025-0209']},
+      'm5':{imagen:null,refs:['RV-2025-0511','RV-2025-0188']},
+      'm6':{imagen:null,refs:['RV-2025-0631']},
+      'm7':{imagen:null,refs:['RV-2025-0644','RV-2025-0612']},
+      'm8':{imagen:null,refs:['RV-2025-0701']},
+      'm9':{imagen:null,refs:['RV-2025-0688']},
+      'm10':{imagen:null,refs:['RV-2025-0901','RV-2025-0902']},
+      'm11':{imagen:null,refs:['RV-2025-0911']}
+    },
+    respuestas:{
+      't1':{done:true,fechaCambio:new Date(Date.now()-3600000).toISOString(),notas:'El bodegón 2 lo adapté porque no tenía la pieza exacta.',
+        fotosFinales:[],aprobacionFotos:null,
+        maniquies:{
+          'm1':{incluido:true,prendas:[{estado:'si'},{estado:'si'}]},
+          'm2':{incluido:true,prendas:[{estado:'si'}]},
+          'm3':{incluido:false},
+          'm4':{incluido:true,prendas:[{estado:'sust',sustRef:'RV-2025-0209-40'}]},
+          'm5':{incluido:false},
+          'm6':{incluido:true,prendas:[{estado:'si'}]},
+          'm7':{incluido:false},
+          'm8':{incluido:false},
+          'm9':{incluido:false},
+          'm10':{incluido:true,prendas:[{estado:'si'},{estado:'no',motivo:'Sin stock'}]},
+          'm11':{incluido:false}
+        }
+      }
+    }
+  },{
+    id:'INS-DEMO002',tipo:'Rotaciones',titulo:'Rotación mesa central · Entrada julio',
+    fecha:new Date(Date.now()+86400000*3).toISOString().split('T')[0],prioridad:'normal',
+    comentarios:'Retirar lino early y colocar piezas rebajas en zona de entrada.',
+    tiendas:['t1','t2'],imagenes:[],
+    refs:[
+      {ref:'RV-2025-0801',desc:'Jersey punto marino',pos:'Mesa entrada',talla:'S/M/L'},
+      {ref:'RV-2025-0744',desc:'Falda midi plisada',pos:'Mesa entrada',talla:'36-44'},
+    ],
+    createdAt:new Date(Date.now()-86400000).toISOString(),respuestas:{}
+  }];
+  saveState();
+}
+</script>
+</body>
+</html>
