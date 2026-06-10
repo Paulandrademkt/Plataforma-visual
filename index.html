@@ -106,7 +106,7 @@
   .img-preview-del { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .img-caption { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.6)); color: white; font-size: 10px; padding: 6px 4px 4px; text-align: center; line-height: 1.3; }
 
-  /* ── MANIQUÍES (HQ) ── */
+  /* ── MANIQUÍS (HQ) ── */
   .maniqi-section { margin-bottom: 24px; }
   .maniqi-group-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--slate); margin-bottom: 10px; padding: 6px 10px; background: var(--sand); border-radius: 4px; }
   .maniqi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
@@ -130,6 +130,17 @@
   .maniqi-ref-add:hover { border-color: var(--gold); color: var(--gold); }
   .maniqi-ref-del { background: none; border: none; color: var(--mid); cursor: pointer; font-size: 14px; padding: 0 2px; }
   .maniqi-ref-del:hover { color: var(--red); }
+  .maniqi-comentario-btn { background: none; border: 1px dashed #B8965A; border-radius: 4px; color: var(--gold); font-size: 11px; font-weight: 600; padding: 5px 8px; cursor: pointer; width: 100%; margin-top: 4px; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .maniqi-comentario-btn:hover { background: var(--gold-light); border-style: solid; }
+  .maniqi-comentario-input { margin-top: 6px; display: none; }
+  .maniqi-comentario-input.visible { display: block; }
+  .maniqi-comentario-input textarea { font-size: 11px; padding: 6px 8px; min-height: 56px; border-color: var(--gold); }
+
+  /* COMENTARIO TIENDA — llamativo */
+  .maniqi-comentario-tienda { margin-top: 10px; background: linear-gradient(135deg, #FDF3DC, #FBE8B8); border: 2px solid var(--gold); border-radius: 8px; padding: 10px 12px; position: relative; }
+  .maniqi-comentario-tienda::before { content: '💬'; position: absolute; top: -10px; left: 12px; font-size: 16px; background: var(--white); padding: 0 4px; }
+  .maniqi-comentario-tienda-label { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #9A7A46; margin-bottom: 4px; }
+  .maniqi-comentario-tienda-text { font-size: 12px; color: var(--black); line-height: 1.5; font-style: italic; }
 
   /* BTNS */
   .btn { border: none; border-radius: 6px; padding: 10px 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
@@ -165,7 +176,7 @@
   .instruccion-body { padding: 20px; display: none; }
   .instruccion-body.open { display: block; }
 
-  /* MANIQUÍ SELECCIÓN (tienda) */
+  /* MANIQUÍS SELECCIÓN (tienda) */
   .maniqi-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
   .maniqi-select-card { border: 2px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.15s; background: var(--white); }
   .maniqi-select-card.included { border-color: var(--gold); }
@@ -341,7 +352,7 @@
     <div id="hq-escaparate-section" style="display:none;">
       <div class="card">
         <div class="card-title">Maniquís — looks de referencia</div>
-        <p style="font-size:12px;color:var(--slate);margin-bottom:16px;">Sube la foto y escanea las referencias de cada maniquí. Las tiendas verán todos pero solo colocarán los que les correspondan.</p>
+        <p style="font-size:12px;color:var(--slate);margin-bottom:16px;">Sube la foto y escanea las referencias de cada maniquís. Las tiendas verán todos pero solo colocarán los que les correspondan.</p>
         <div id="maniqi-editor"></div>
       </div>
     </div>
@@ -588,12 +599,26 @@ function renderManiquiEditor() {
           <input type="file" accept="image/*" style="display:none" id="file-${m.id}" onchange="handleManiquiImg('${m.id}',event)">
           <div class="maniqi-refs-list" id="refs-${m.id}">${refsHTML}</div>
           <button class="maniqi-ref-add" onclick="addManiquiRef('${m.id}')">+ Añadir referencia</button>
+          <button class="maniqi-comentario-btn" onclick="toggleComentarioHQ('${m.id}')">💬 Comentario para la tienda</button>
+          <div class="maniqi-comentario-input ${data.comentario?'visible':''}" id="comentario-hq-${m.id}">
+            <textarea placeholder="Ej: Poner la chaqueta abierta, bolso colgado en el brazo izquierdo..." onchange="updateManiquiComentario('${m.id}',this.value)">${data.comentario||''}</textarea>
+          </div>
         </div>
       </div>`;
     });
     html += `</div></div>`;
   });
   wrap.innerHTML = html;
+}
+
+function toggleComentarioHQ(mid) {
+  const el = document.getElementById('comentario-hq-'+mid);
+  el.classList.toggle('visible');
+  if(el.classList.contains('visible')) el.querySelector('textarea').focus();
+}
+function updateManiquiComentario(mid, val) {
+  if(!state.maniquies[mid]) state.maniquies[mid]={ imagen:null, refs:[] };
+  state.maniquies[mid].comentario = val.trim();
 }
 
 function triggerManiquiUpload(mid) {
@@ -817,10 +842,10 @@ function verDetalleHQ(id) {
           </div>
         </div>`;
       }
-      // maniquíes respuestas (escaparate)
+      // maniquís respuestas (escaparate)
       if(ins.tipo==='Escaparate' && resp.maniquies) {
         const incluidos = Object.entries(resp.maniquies).filter(([,v])=>v.incluido);
-        html += `<div style="font-size:12px;color:var(--slate);margin-top:4px;">Maniquíes incluidos: ${incluidos.map(([mid])=>MANIQUIES_DEF.find(m=>m.id===mid)?.label||mid).join(', ')||'—'}</div>`;
+        html += `<div style="font-size:12px;color:var(--slate);margin-top:4px;">Maniquís incluidos: ${incluidos.map(([mid])=>MANIQUIES_DEF.find(m=>m.id===mid)?.label||mid).join(', ')||'—'}</div>`;
       }
       if(resp.notas) html += `<div class="review-nota">"${resp.notas}"</div>`;
     }
@@ -962,8 +987,8 @@ function buildTiendaBody(ins, resp, done) {
 
 function buildEscaparateBody(ins, resp, done, dis) {
   let html = `<div style="${dis}">`;
-  html += `<div class="card-title">Selecciona los maniquíes que vas a colocar</div>`;
-  html += `<p style="font-size:12px;color:var(--slate);margin-bottom:14px;">Ves todos los maniquíes de la instrucción. Marca solo los que te corresponden. Para cada uno confirma las prendas colocadas.</p>`;
+  html += `<div class="card-title">Selecciona los maniquís que vas a colocar</div>`;
+  html += `<p style="font-size:12px;color:var(--slate);margin-bottom:14px;">Ves todos los maniquís de la instrucción. Marca solo los que te corresponden. Para cada uno confirma las prendas colocadas.</p>`;
 
   const mqs = MANIQUIES_DEF;
   const groups = [
@@ -987,16 +1012,17 @@ function buildEscaparateBody(ins, resp, done, dis) {
         </div>
         <div class="msc-img">${mData.imagen?`<img src="${mData.imagen}" onclick="openLightbox('${mData.imagen}');event.stopPropagation()">`:'<div class="no-img">📷</div>'}</div>
         <div class="msc-refs">${(mData.refs||[]).map(r=>`<span class="ref-badge">${r}</span>`).join('')}</div>
+        ${mData.comentario ? `<div class="maniqi-comentario-tienda"><div class="maniqi-comentario-tienda-label">Indicación Visual</div><div class="maniqi-comentario-tienda-text">${mData.comentario}</div></div>` : ''}
       </div>`;
     });
     html += '</div></div>';
   });
 
-  // prendas de maniquíes incluidos
+  // prendas de maniquís incluidos
   if(resp?.maniquies) {
     const includidos = MANIQUIES_DEF.filter(m => resp.maniquies[m.id]?.incluido);
     if(includidos.length) {
-      html += `<div class="card-title" style="margin-top:4px;">Confirmación de prendas por maniquí</div>`;
+      html += `<div class="card-title" style="margin-top:4px;">Confirmación de prendas por maniquís</div>`;
       includidos.forEach(m => {
         const mData = ins.maniquies?.[m.id] || { refs:[] };
         const mResp = resp.maniquies[m.id];
